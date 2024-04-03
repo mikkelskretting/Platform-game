@@ -2,7 +2,10 @@ import random
 from konstanter import *
 import pygame as pg
 
+game_over = 0
+ 
 type_picture = 0
+dead_picture = 0
 checkpoint = pg.image.load('Bilder/10.png')
 checkpoint = pg.transform.scale(checkpoint, (tile_size, tile_size * 2))
 
@@ -88,6 +91,9 @@ class World():
                 if tile == 11: 
                     enemy = Enemy(column_count * tile_size, row_count * tile_size)
                     enemy_group.add(enemy)
+                if tile == 12: 
+                    lava = Lava(column_count * tile_size, row_count * tile_size + tile_size // 2)
+                    lava_group.add(lava)
                 column_count += 1
             row_count += 1 
 
@@ -98,8 +104,9 @@ class World():
 
 
 class Player(): 
-    def __init__(self, x, y, type_picture): 
+    def __init__(self, x, y, type_picture, dead_picture): 
         self.type_picture = type_picture
+        self.dead_picture = dead_picture
     
         if type_picture == 0:
             img = pg.image.load(f'Bilder/player1.png')
@@ -125,66 +132,85 @@ class Player():
         surface.blit(self.image, self.rect)
         
 
-    def update(self, world):
-        dx = self.vx
-        dy = self.vy
+    def update(self, world, game_over):
+        if game_over == 0:
 
-        self.rect.y += self.vy
-        self.rect.x += self.vx
+            dx = self.vx
+            dy = self.vy
 
-        # Sjekker om spilleren er på bakken
-        """ if self.y >= HEIGHT - self.size - tile_size: 
-            self.y = HEIGHT - self.size - tile_size
-            self.vy = 0
-            self.on_ground = True 
-            for tile in world.tile_list:
-                if self.x <= tile[1].x: 
-                    self.x = tile[1].x 
-                    self.vx = 0
-                elif self.x > tile[1].x + tile_size:
-                    self.x = tile[1].x + tile_size 
-                    self.vx = 0 """ 
+            self.rect.y += self.vy
+            self.rect.x += self.vx
+
+            # Sjekker om spilleren er på bakken
+            """ if self.y >= HEIGHT - self.size - tile_size: 
+                self.y = HEIGHT - self.size - tile_size
+                self.vy = 0
+                self.on_ground = True 
+                for tile in world.tile_list:
+                    if self.x <= tile[1].x: 
+                        self.x = tile[1].x 
+                        self.vx = 0
+                    elif self.x > tile[1].x + tile_size:
+                        self.x = tile[1].x + tile_size 
+                        self.vx = 0 """ 
                 
                     
         
-        # Tyngdekraft
-        self.vy += 1
-        if self.vy > 10: 
-            self.vy = 10
-        dy += self.vy
+            # Tyngdekraft
+            self.vy += 1
+        
+            if self.vy > 10: 
+                self.vy = 10
+            dy += self.vy
 
-        # Kollisjon mellom spiller og map
-        for tile in world.tile_list: 
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-        # Adjust player's horizontal position to stop movement
-                if dx > 0:
-                    self.rect.right = tile[1].left - 4.9
-                elif dx < 0:
-                    self.rect.left = tile[1].right + 4.9
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height): 
-                    # Hoppe i en tile
-                if self.vy < 0: 
-                    #dy = tile[1].bottom - self.rect.top
-                    dy = 0
-                    self.vy = 0
+            # Kollisjon mellom spiller og map
+            for tile in world.tile_list: 
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+            # Adjust player's horizontal position to stop movement
+                    if dx > 0:
+                        self.rect.right = tile[1].left - 4.9
+                    elif dx < 0:
+                        self.rect.left = tile[1].right + 4.9
+                if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height): 
+                        # Hoppe i en tile
+                    if self.vy < 0: 
+                        #dy = tile[1].bottom - self.rect.top
+                        dy = 0
+                        self.vy = 0
 
-                    # Falle på en tile
-                elif self.vy >= 0: 
-                    dy = tile[1].top - self.rect.bottom
-                    self.vy = 0
-                    self.on_ground = True
+                        # Falle på en tile
+                    elif self.vy >= 0: 
+                        dy = tile[1].top - self.rect.bottom
+                        self.vy = 0
+                        self.on_ground = True
             
+            # Sjekker kollisjon med enemies
+            if pg.sprite.spritecollide(self, enemy_group, False): 
+                game_over = -1
+                print("hore")
 
-        self.rect.x += dx
-        self.rect.y += dy
+            # Sjekker kollisjon med lava
+            if pg.sprite.spritecollide(self, lava_group, False): 
+                game_over = -1
+                print("Pikk")
+                
 
-        """ if self.rect.bottom < HEIGHT: 
-            self.rect.bottom = HEIGHT
-            dy = 0 """
+            self.rect.x += dx
+            self.rect.y += dy
+
+            """ if self.rect.bottom < HEIGHT: 
+                self.rect.bottom = HEIGHT
+                dy = 0 """
+            
+        elif game_over == -1: 
+            self.image = pg.transform.scale(pg.image.load('Bilder/ghost.png'), (tile_size, tile_size))
+            self.rect.y -= 5
+            
+        return game_over
 
 class Player1(Player):
-    def __init__(self, x, y, type_picture):
-        super().__init__(x, y, type_picture)
+    def __init__(self, x, y, type_picture, dead_picture):
+        super().__init__(x, y, type_picture, dead_picture)
         self.direction = 1  # 1 for right, -1 for left
 
     def move(self):
@@ -217,8 +243,8 @@ class Player1(Player):
 
 class Player2(Player):
 
-    def __init__(self, x, y, type_picture):
-        super().__init__(x, y, type_picture)
+    def __init__(self, x, y, type_picture, dead_picture):
+        super().__init__(x, y, type_picture, dead_picture)
         self.direction = 1
 
     def move(self): 
@@ -285,11 +311,23 @@ class Enemy(pg.sprite.Sprite):
             self.move_direction *= -1
             self.move_counter *= -1
 
+class Lava(pg.sprite.Sprite): 
+    def __init__(self, x, y): 
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.transform.scale(pg.image.load('Bilder/lava.png'), (tile_size, tile_size // 2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.move_direction = 1
+        self.move_counter = 0
+
 # Lager world og player objects
-player1 = Player1(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1)
-player2 = Player2(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0)
+player1 = Player1(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1, 1)
+player2 = Player2(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0, 0)
 
 enemy_group = pg.sprite.Group()
+
+lava_group = pg.sprite.Group()
 
 
 

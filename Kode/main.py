@@ -40,14 +40,17 @@ while run:
 
     world.draw()
 
-    enemy_group.update()
+    if game_over == 0:  
+        enemy_group.update()
     enemy_group.draw(surface)
 
-    player1.update(world)
+    lava_group.draw(surface)
+
+    game_over = player1.update(world, game_over)
     player1.move()
     player1.draw()
         
-    player2.update(world)
+    game_over = player2.update(world, game_over)
     player2.move()
     player2.draw()
 
