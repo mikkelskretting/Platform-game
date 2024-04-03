@@ -40,6 +40,9 @@ while run:
 
     world.draw()
 
+    enemy_group.update()
+    enemy_group.draw(surface)
+
     player1.update(world)
     player1.move()
     player1.draw()

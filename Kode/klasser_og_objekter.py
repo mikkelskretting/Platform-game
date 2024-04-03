@@ -79,13 +79,13 @@ class World():
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 if tile == 9: 
-                    img = pg.transform.scale(images[8], (tile_size, tile_size))
+                    img = pg.transform.scale(images[9], (tile_size, tile_size))
                     img_rect = img.get_rect()
                     img_rect.x = column_count * tile_size 
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
-                if tile == 10: 
+                if tile == 11: 
                     enemy = Enemy(column_count * tile_size, row_count * tile_size)
                     enemy_group.add(enemy)
                 column_count += 1
@@ -183,11 +183,11 @@ class Player():
             dy = 0 """
 
 class Player1(Player):
-
     def __init__(self, x, y, type_picture):
         super().__init__(x, y, type_picture)
+        self.direction = 1  # 1 for right, -1 for left
 
-    def move(self): 
+    def move(self):
         # Nullstiller farten
         self.vx = 0
         
@@ -197,20 +197,29 @@ class Player1(Player):
         # Sjekker om tasten "d" er trykket på
         if keys[pg.K_d]:
             self.vx = PLAYER_VEL
+            self.direction = 1  # Set direction to right
             
         # Sjekker om tasten "a" er trykket på
         if keys[pg.K_a]:
             self.vx = -PLAYER_VEL
+            self.direction = -1  # Set direction to left
 
         if keys[pg.K_w] and self.on_ground == True: 
             self.vy = -8
-            self.on_ground = False
+            self.on_ground = False 
 
+    def draw(self):
+        # Flip image horizontally if direction is left
+        if self.direction == -1:
+            surface.blit(pg.transform.flip(self.image, True, False), self.rect)
+        else:
+            surface.blit(self.image, self.rect)
 
 class Player2(Player):
 
     def __init__(self, x, y, type_picture):
         super().__init__(x, y, type_picture)
+        self.direction = 1
 
     def move(self): 
         super().__init__
@@ -223,14 +232,22 @@ class Player2(Player):
         # Sjekker om tasten "w" er trykket på
         if keys[pg.K_RIGHT]:
             self.vx = PLAYER_VEL
+            self.direction = 1
             
         # Sjekker om tasten "s" er trykket på
         if keys[pg.K_LEFT]:
             self.vx = -PLAYER_VEL
+            self.direction = -1
 
         if keys[pg.K_UP] and self.on_ground == True: 
             self.vy = -8
             self.on_ground = False
+    def draw(self):
+        # Flip image horizontally if direction is left
+        if self.direction == -1:
+            surface.blit(pg.transform.flip(self.image, True, False), self.rect)
+        else:
+            surface.blit(self.image, self.rect)
  
 
 """ class Obstacle:
@@ -254,16 +271,27 @@ class Player2(Player):
 class Enemy(pg.sprite.Sprite): 
     def __init__(self, x, y): 
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.image.load('Bilder/enemy.png')
+        self.image = pg.transform.scale(pg.image.load('Bilder/enemy.png'), (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.move_direction = 1
+        self.move_counter = 0
+
+    def update(self):
+        self.rect.x += self.move_direction
+        self.move_counter += 1
+        if self.move_counter > 100: 
+            self.move_direction *= -1
+            self.move_counter *= -1
 
 # Lager world og player objects
 player1 = Player1(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1)
 player2 = Player2(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0)
 
 enemy_group = pg.sprite.Group()
+
+
 
 world = World(world_data)
 
