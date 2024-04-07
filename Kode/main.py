@@ -36,23 +36,38 @@ while run:
 
     surface.fill(BLACK) 
 
-    # draw_grid()
+    if main_menu == True:
+        if exit_button.draw():
+            run = False
+        if start_button.draw():
+            main_menu = False
+    else:
+# draw_grid
+        world.draw()
 
-    world.draw()
+        if game_over == 0:  
+            enemy_group.update()
+        enemy_group.draw(surface)
 
-    if game_over == 0:  
-        enemy_group.update()
-    enemy_group.draw(surface)
+        lava_group.draw(surface)
 
-    lava_group.draw(surface)
+    
+        game_over = player1.update(world, game_over)
+        player1.move()
+        player1.draw()
+            
+        game_over = player2.update(world, game_over)
+        player2.move()
+        player2.draw()
 
-    game_over = player1.update(world, game_over)
-    player1.move()
-    player1.draw()
-        
-    game_over = player2.update(world, game_over)
-    player2.move()
-    player2.draw()
+        if game_over == - 1:
+            if restart_button.draw():
+                player1.reset(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1, 1)
+                player2.reset(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0, 0)
+                game_over = 0
+
+
+
 
     if player1.rect.x == tile_size * 15 and player1.rect.y == tile_size * 1.5: 
         print("Player 1 won!")

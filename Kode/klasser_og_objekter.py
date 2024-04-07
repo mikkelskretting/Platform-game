@@ -3,11 +3,16 @@ from konstanter import *
 import pygame as pg
 
 game_over = 0
+main_menu = True
  
 type_picture = 0
 dead_picture = 0
 checkpoint = pg.image.load('Bilder/10.png')
 checkpoint = pg.transform.scale(checkpoint, (tile_size, tile_size * 2))
+
+restart_img = pg.image.load('Bilder/restart.png')
+start_img = pg.image.load('Bilder/start.png')
+exit_img = pg.image.load('Bilder/exit.png')
 
 surface = pg.display.set_mode(SIZE)
 
@@ -102,27 +107,37 @@ class World():
             surface.blit(tile[0], tile[1])
         surface.blit(checkpoint, (tile_size * 15, tile_size * 2))
 
-
-class Player(): 
-    def __init__(self, x, y, type_picture, dead_picture): 
-        self.type_picture = type_picture
-        self.dead_picture = dead_picture
-    
-        if type_picture == 0:
-            img = pg.image.load(f'Bilder/player1.png')
-        if type_picture == 1: 
-            img = pg.image.load(f'Bilder/player2.png')
-        self.image = pg.transform.scale(img, (40, 40))
+class Button():
+    def __init__(self, x, y, image):
+        self.image = image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.vx = 0
-        self.vy = 0
-        self.on_ground = False # Hopping
-        self.vertical_hit = False
-        self.horizontal_hit = False
+        self.clicked = False
+
+    def draw(self):
+        action = False
+        pos = pg.mouse.get_pos()
+
+        if self.rect.collidepoint(pos):
+            if pg.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                action = True
+                self.clicked = True
+        
+        if pg.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+                
+
+
+        surface.blit(self.image, self.rect)
+
+        return action
+
+
+
+class Player(): 
+    def __init__(self, x, y, type_picture, dead_picture): 
+        self.reset(x, y, type_picture, dead_picture)
         
     """ def jump(self): 
         if self.on_ground:
@@ -207,6 +222,27 @@ class Player():
             self.rect.y -= 5
             
         return game_over
+
+    def reset(self, x, y, type_picture, dead_picture):
+        self.type_picture = type_picture
+        self.dead_picture = dead_picture
+    
+        if type_picture == 0:
+            img = pg.image.load(f'Bilder/player1.png')
+        if type_picture == 1: 
+            img = pg.image.load(f'Bilder/player2.png')
+        self.image = pg.transform.scale(img, (40, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.vx = 0
+        self.vy = 0
+        self.on_ground = False # Hopping
+        self.vertical_hit = False
+        self.horizontal_hit = False
+        
 
 class Player1(Player):
     def __init__(self, x, y, type_picture, dead_picture):
@@ -333,3 +369,6 @@ lava_group = pg.sprite.Group()
 
 world = World(world_data)
 
+restart_button = Button(WIDTH // 2 - 50, HEIGHT // 2, restart_img)
+start_button = Button(WIDTH // 2 - 350, HEIGHT // 2, start_img)
+exit_button = Button(WIDTH // 2 + 150, HEIGHT // 2, exit_img)
