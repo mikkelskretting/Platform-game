@@ -2,6 +2,7 @@ import random
 import pygame as pg
 from klasser_og_objekter import *
 from konstanter import *
+import pickle
 
 # initierer pygame
 pg.init()
@@ -12,10 +13,13 @@ surface = pg.display.set_mode(SIZE)
 # Lager en klokke
 clock = pg.time.Clock()
 
+max_levels = 2
+
 """ def draw_grid(): 
     for line in range(0,WIDTH // tile_size):
         pg.draw.line(surface, WHITE, (0, line* tile_size), (WIDTH, line * tile_size))
         pg.draw.line(surface, WHITE, (line * tile_size, 0), (line * tile_size, HEIGHT)) """
+
 
 
 # Variabel som styrer om spillet skal kjøres
@@ -51,6 +55,8 @@ while run:
 
         lava_group.draw(surface)
 
+        exit_group.draw(surface)
+
     
         game_over = player1.update(world, game_over)
         player1.move()
@@ -62,9 +68,25 @@ while run:
 
         if game_over == - 1:
             if restart_button.draw():
-                player1.reset(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1, 1)
-                player2.reset(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0, 0)
+                world_data = []
+                world = reset_level(level)
                 game_over = 0
+
+        if game_over == 1:
+            level += 1
+
+            if level <= max_levels:
+                world_data = []
+                world = reset_level(level)
+                game_over = 0
+            
+            else:
+                if restart_button.draw():
+                    level = 1
+                    world_data = []
+                    world = reset_level(level)
+                    game_over = 0
+
 
 
 

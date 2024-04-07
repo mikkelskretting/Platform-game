@@ -1,14 +1,17 @@
 import random 
 from konstanter import *
 import pygame as pg
+import pickle
+from os import path
 
 game_over = 0
 main_menu = True
+
+level = 1
  
 type_picture = 0
 dead_picture = 0
-checkpoint = pg.image.load('Bilder/10.png')
-checkpoint = pg.transform.scale(checkpoint, (tile_size, tile_size * 2))
+
 
 restart_img = pg.image.load('Bilder/restart.png')
 start_img = pg.image.load('Bilder/start.png')
@@ -93,6 +96,9 @@ class World():
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
+                if tile == 10:
+                    exit = Exit(column_count * tile_size, row_count * tile_size - (tile_size // 2))
+                    exit_group.add(exit)
                 if tile == 11: 
                     enemy = Enemy(column_count * tile_size, row_count * tile_size)
                     enemy_group.add(enemy)
@@ -106,6 +112,21 @@ class World():
         for tile in self.tile_list: 
             surface.blit(tile[0], tile[1])
         surface.blit(checkpoint, (tile_size * 15, tile_size * 2))
+
+
+def reset_level(level):
+    player1.reset(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1, 1)
+    player2.reset(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0, 0)
+    enemy_group.empty()
+    lava_group.empty()
+    exit_group.empty()
+
+    if path.exists(f'level{level}_data'):
+        pickle_in = open(f'level{level}_data', 'rb')
+        world_data = pickle.load(pickle_in)
+    world = World(world_data)
+
+    return world
 
 class Button():
     def __init__(self, x, y, image):
@@ -202,12 +223,17 @@ class Player():
             # Sjekker kollisjon med enemies
             if pg.sprite.spritecollide(self, enemy_group, False): 
                 game_over = -1
-                print("hore")
+                
 
             # Sjekker kollisjon med lava
             if pg.sprite.spritecollide(self, lava_group, False): 
                 game_over = -1
-                print("Pikk")
+                
+
+             # Sjekker kollisjon med checkpoint
+            if pg.sprite.spritecollide(self, exit_group, False): 
+                game_over = 1
+                
                 
 
             self.rect.x += dx
@@ -357,16 +383,27 @@ class Lava(pg.sprite.Sprite):
         self.move_direction = 1
         self.move_counter = 0
 
+class Exit(pg.sprite.Sprite): 
+    def __init__(self, x, y): 
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.transform.scale(pg.image.load('Bilder/checkpoint.png'), (tile_size, int(tile_size * 1.5)))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.move_direction = 1
+        self.move_counter = 0
+
 # Lager world og player objects
 player1 = Player1(tile_size * 2 + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 1, 1)
 player2 = Player2(tile_size + PLAYER_SIZE / 2, HEIGHT - tile_size * 2, 0, 0)
 
 enemy_group = pg.sprite.Group()
-
 lava_group = pg.sprite.Group()
+exit_group = pg.sprite.Group()
 
-
-
+if path.exists(f'level{level}_data'):
+    pickle_in = open(f'level{level}_data', 'rb')
+    world_data = pickle.load(pickle_in)
 world = World(world_data)
 
 restart_button = Button(WIDTH // 2 - 50, HEIGHT // 2, restart_img)
