@@ -401,10 +401,10 @@ enemy_group = pg.sprite.Group()
 lava_group = pg.sprite.Group()
 exit_group = pg.sprite.Group()
 
-if path.exists(f'level{level}_data'):
+""" if path.exists(f'level{level}_data'):
     pickle_in = open(f'level{level}_data', 'rb')
     world_data = pickle.load(pickle_in)
-world = World(world_data)
+world = World(world_data) """
 
 restart_button = Button(WIDTH // 2 - 50, HEIGHT // 2, restart_img)
 start_button = Button(WIDTH // 2 - 350, HEIGHT // 2, start_img)
